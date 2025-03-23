@@ -2,7 +2,10 @@ export interface ResourceNode {
   id: string
   name: string
   type: string
-  description?: string
+  position: {
+    x: number
+    y: number
+  }
 }
 
 export interface Connection {
@@ -10,6 +13,5 @@ export interface Connection {
   source: string
   target: string
   type: string
-  label?: string
 }
 

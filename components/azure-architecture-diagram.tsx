@@ -8,8 +8,11 @@ import { ResourceForm } from "@/components/resource-form"
 import { ConnectionForm } from "@/components/connection-form"
 import { DiagramView } from "@/components/diagram-view"
 import { AiPromptForm } from "@/components/ai-prompt-form"
+import { BomView } from "@/components/bom-view"
+import { ArmTemplateOptions } from "@/components/arm-template-options"
+import { CodeDeploymentOptions } from "@/components/code-deployment-options"
 import type { ResourceNode, Connection } from "@/lib/types"
-import { Download } from "lucide-react"
+import { generateCode, deployCode, downloadCode } from "@/lib/code-generation"
 
 interface AzureArchitectureDiagramProps {
   chatId: string | null
@@ -20,13 +23,16 @@ export function AzureArchitectureDiagram({ chatId }: AzureArchitectureDiagramPro
   const [connections, setConnections] = useState<Connection[]>([])
   const [activeTab, setActiveTab] = useState("ai")
   const [isGeneratingArm, setIsGeneratingArm] = useState(false)
+  const [isDeploying, setIsDeploying] = useState(false)
   const [armTemplate, setArmTemplate] = useState<string | null>(null)
+  const [showBom, setShowBom] = useState(false)
 
   // Reset state when chat changes
   useEffect(() => {
     setResources([])
     setConnections([])
     setArmTemplate(null)
+    setShowBom(false)
   }, [chatId])
 
   const addResource = (resource: ResourceNode) => {
@@ -80,6 +86,24 @@ export function AzureArchitectureDiagram({ chatId }: AzureArchitectureDiagramPro
     }
   }
 
+  const deployToAzure = async () => {
+    setIsDeploying(true)
+    try {
+      // In a real implementation, this would:
+      // 1. Check if user is authenticated
+      // 2. If not, initiate OAuth flow
+      // 3. Get access token
+      // 4. Call Azure Management API to deploy the template
+      await new Promise((resolve) => setTimeout(resolve, 2000)) // Simulate API call
+      alert("Template deployed successfully!")
+    } catch (error) {
+      console.error("Deployment failed:", error)
+      alert("Failed to deploy template. Please try again.")
+    } finally {
+      setIsDeploying(false)
+    }
+  }
+
   const downloadArmTemplate = () => {
     if (!armTemplate) return
 
@@ -92,6 +116,39 @@ export function AzureArchitectureDiagram({ chatId }: AzureArchitectureDiagramPro
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
+  }
+
+  const handleGenerateCode = async (resourceId: string) => {
+    try {
+      const code = await generateCode(resourceId, "function")
+      // Store the generated code in your state or backend
+      console.log("Generated code:", code)
+    } catch (error) {
+      console.error("Failed to generate code:", error)
+      throw error
+    }
+  }
+
+  const handleDeployCode = async (resourceId: string) => {
+    try {
+      await deployCode(resourceId, "function")
+      // Handle successful deployment
+      console.log("Code deployed successfully")
+    } catch (error) {
+      console.error("Failed to deploy code:", error)
+      throw error
+    }
+  }
+
+  const handleDownloadCode = async (resourceId: string) => {
+    try {
+      await downloadCode(resourceId, "function")
+      // Handle successful download
+      console.log("Code downloaded successfully")
+    } catch (error) {
+      console.error("Failed to download code:", error)
+      throw error
+    }
   }
 
   if (!chatId) {
@@ -138,8 +195,8 @@ export function AzureArchitectureDiagram({ chatId }: AzureArchitectureDiagramPro
               <Button onClick={exportDiagram} variant="outline">
                 Export Diagram
               </Button>
-              <Button onClick={exportDiagram} variant="outline">
-                Export BOM
+              <Button onClick={() => setShowBom(!showBom)} variant="outline">
+                {showBom ? "Hide BOM" : "Show BOM"}
               </Button>
               <Button
                 onClick={generateArmTemplate}
@@ -152,15 +209,32 @@ export function AzureArchitectureDiagram({ chatId }: AzureArchitectureDiagramPro
           </div>
           <DiagramView resources={resources} connections={connections} />
 
+          {showBom && resources.length > 0 && (
+            <div className="mt-6">
+              <BomView resources={resources} />
+            </div>
+          )}
+
           {armTemplate && (
-            <div className="mt-4">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="text-lg font-medium">ARM Template</h3>
-                <Button onClick={downloadArmTemplate} size="sm" variant="outline" className="flex items-center gap-1">
-                  <Download className="h-4 w-4" /> Download
-                </Button>
-              </div>
-              <pre className="bg-muted p-4 rounded-md text-xs overflow-auto max-h-[200px]">{armTemplate}</pre>
+            <div className="mt-6">
+              <ArmTemplateOptions
+                armTemplate={armTemplate}
+                onDeploy={deployToAzure}
+                onExport={downloadArmTemplate}
+                isDeploying={isDeploying}
+              />
+            </div>
+          )}
+
+          {/* Show code generation options if there are Function Apps or Web Apps */}
+          {(resources.some(r => r.type === "appService") || resources.some(r => r.type === "function")) && (
+            <div className="mt-6">
+              <CodeDeploymentOptions
+                resources={resources}
+                onGenerateCode={handleGenerateCode}
+                onDeployCode={handleDeployCode}
+                onDownloadCode={handleDownloadCode}
+              />
             </div>
           )}
         </CardContent>

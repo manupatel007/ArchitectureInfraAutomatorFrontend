@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { ResourceNode } from "@/lib/types"
 import { Trash2 } from "lucide-react"
-import { azureResourceTypes } from "@/lib/azure-resources"
 
 interface ResourceFormProps {
   onAddResource: (resource: ResourceNode) => void
@@ -27,48 +26,58 @@ export function ResourceForm({ onAddResource, resources, onRemoveResource }: Res
     if (!name || !type) return
 
     onAddResource({
-      id: "", // Will be set by parent component
+      id: `resource-${resources.length + 1}`,
       name,
       type,
-      description,
+      position: { x: 100, y: 100 },
     })
 
-    // Reset form
     setName("")
     setType("")
     setDescription("")
   }
 
   return (
-    <div>
-      <form onSubmit={handleSubmit} className="space-y-4 mb-6">
+    <div className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="name">Resource Name</Label>
           <Input
             id="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g., Web App, SQL Database"
-            required
+            placeholder="Enter resource name"
           />
         </div>
-
         <div className="space-y-2">
           <Label htmlFor="type">Resource Type</Label>
-          <Select value={type} onValueChange={setType} required>
-            <SelectTrigger id="type">
+          <Select value={type} onValueChange={setType}>
+            <SelectTrigger>
               <SelectValue placeholder="Select resource type" />
             </SelectTrigger>
             <SelectContent>
-              {azureResourceTypes.map((resourceType) => (
-                <SelectItem key={resourceType.value} value={resourceType.value}>
-                  {resourceType.label}
-                </SelectItem>
-              ))}
+              <SelectItem value="function-app">Function App</SelectItem>
+              <SelectItem value="web-app">Web App</SelectItem>
+              <SelectItem value="appService">App Service</SelectItem>
+              <SelectItem value="sqlDatabase">SQL Database</SelectItem>
+              <SelectItem value="cosmosDb">Cosmos DB</SelectItem>
+              <SelectItem value="storageAccount">Storage Account</SelectItem>
+              <SelectItem value="virtualMachine">Virtual Machine</SelectItem>
+              <SelectItem value="apiManagement">API Management</SelectItem>
+              <SelectItem value="keyVault">Key Vault</SelectItem>
+              <SelectItem value="serviceBus">Service Bus</SelectItem>
+              <SelectItem value="eventHub">Event Hub</SelectItem>
+              <SelectItem value="logicApp">Logic App</SelectItem>
+              <SelectItem value="applicationGateway">Application Gateway</SelectItem>
+              <SelectItem value="loadBalancer">Load Balancer</SelectItem>
+              <SelectItem value="containerInstance">Container Instance</SelectItem>
+              <SelectItem value="kubernetesService">Kubernetes Service</SelectItem>
+              <SelectItem value="cognitiveServices">Cognitive Services</SelectItem>
+              <SelectItem value="applicationInsights">Application Insights</SelectItem>
+              <SelectItem value="frontDoor">Front Door</SelectItem>
             </SelectContent>
           </Select>
         </div>
-
         <div className="space-y-2">
           <Label htmlFor="description">Description (Optional)</Label>
           <Input
@@ -78,32 +87,33 @@ export function ResourceForm({ onAddResource, resources, onRemoveResource }: Res
             placeholder="Brief description of this resource"
           />
         </div>
-
         <Button type="submit" className="w-full">
           Add Resource
         </Button>
       </form>
 
-      <div className="space-y-2">
-        <h3 className="text-sm font-medium">Added Resources</h3>
-        {resources.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No resources added yet</p>
-        ) : (
-          <ul className="space-y-2">
+      {resources.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="font-medium">Added Resources</h3>
+          <div className="space-y-2">
             {resources.map((resource) => (
-              <li key={resource.id} className="flex items-center justify-between p-2 bg-muted rounded-md">
+              <div key={resource.id} className="flex items-center justify-between p-2 border rounded">
                 <div>
-                  <span className="font-medium">{resource.name}</span>
-                  <span className="text-xs text-muted-foreground ml-2">({resource.type})</span>
+                  <p className="font-medium">{resource.name}</p>
+                  <p className="text-sm text-muted-foreground">{resource.type}</p>
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => onRemoveResource(resource.id)} className="h-8 w-8">
-                  <Trash2 className="h-4 w-4" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onRemoveResource(resource.id)}
+                >
+                  Remove
                 </Button>
-              </li>
+              </div>
             ))}
-          </ul>
-        )}
-      </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

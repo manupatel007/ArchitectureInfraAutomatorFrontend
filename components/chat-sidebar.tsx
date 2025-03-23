@@ -14,11 +14,17 @@ interface Chat {
 
 interface ChatSidebarProps {
   onChatSelect: (chatId: string) => void
-  activeChatId: string | null
+  activeChatId: string
 }
 
 export function ChatSidebar({ onChatSelect, activeChatId }: ChatSidebarProps) {
   const [chats, setChats] = useState<Chat[]>([
+    {
+      id: "default",
+      title: "Default Chat",
+      lastMessage: "Start designing your Azure architecture",
+      timestamp: new Date(),
+    },
     {
       id: "1",
       title: "Web Application Architecture",
@@ -45,14 +51,15 @@ export function ChatSidebar({ onChatSelect, activeChatId }: ChatSidebarProps) {
   }
 
   const deleteChat = (chatId: string) => {
+    if (chatId === "default") return // Prevent deleting the default chat
     setChats((prev) => prev.filter((chat) => chat.id !== chatId))
     if (activeChatId === chatId) {
-      onChatSelect("")
+      onChatSelect("default")
     }
   }
 
   return (
-    <div className="flex flex-col h-full border-r">
+    <div className="w-80 flex flex-col h-full border-r bg-background">
       <div className="p-4 border-b">
         <Button onClick={createNewChat} className="w-full" variant="outline">
           <Plus className="h-4 w-4 mr-2" />
@@ -78,17 +85,19 @@ export function ChatSidebar({ onChatSelect, activeChatId }: ChatSidebarProps) {
                   </span>
                 </div>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  deleteChat(chat.id)
-                }}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              {chat.id !== "default" && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    deleteChat(chat.id)
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           ))}
         </div>
